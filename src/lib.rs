@@ -64,17 +64,10 @@ async fn launch_server_and_wait_for_response(port: u16) {
 type ResponseClosure = fn(Option<Request<Body>>) -> ();
 
 pub fn start_listening_for_request(port: u16, closure: ResponseClosure) {
-    debug_println!("Listening for incoming request");
-
     Builder::new_current_thread()
         .enable_all()
         .build()
         .unwrap()
         .block_on(launch_server_and_wait_for_response(port));
-
-    debug_println!("Finished listening to request!");
-
-    debug_println!("Handing control back");
     closure(G_RESPONSE.lock().unwrap().take());
-    debug_println!("Done with the request, exiting now");
 }
