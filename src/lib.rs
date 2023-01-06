@@ -21,9 +21,6 @@ lazy_static! {
 }
 
 async fn handle_request(request: Request<Body>) -> Result<Response<Body>, Infallible> {
-    debug_println!("Received a request from some location");
-    debug_println!("Destination : {}", request.uri().to_string());
-
     match G_SENDER.lock().unwrap().take() {
         Some(sender) => {
             G_RESPONSE.lock().unwrap().replace(request);
@@ -35,7 +32,6 @@ async fn handle_request(request: Request<Body>) -> Result<Response<Body>, Infall
             debug_println!("Kill signal found empty!");
         }
     };
-
     Ok(Response::new(Body::from("Request handled successfully!")))
 }
 
