@@ -28,11 +28,11 @@ async fn handle_request(request: Request<Body>) -> Result<Response<Body>, Infall
         Some(sender) => {
             G_RESPONSE.lock().unwrap().replace(request);
 
-            debug_println!("Sending the signal");
+            debug_println!("Killing the server");
             sender.send(()).unwrap();
         }
         None => {
-            debug_println!("Lock found empty!");
+            debug_println!("Kill signal found empty!");
         }
     };
 
@@ -64,7 +64,7 @@ async fn launch_server_and_wait_for_response(port: u16) {
 type ResponseClosure = fn(Option<Request<Body>>) -> ();
 
 pub fn start_listening_for_request(port: u16, closure: ResponseClosure) {
-    println!("Listening for any incoming requsts");
+    debug_println!("Listening for incoming request");
 
     Builder::new_current_thread()
         .enable_all()
@@ -72,17 +72,9 @@ pub fn start_listening_for_request(port: u16, closure: ResponseClosure) {
         .unwrap()
         .block_on(launch_server_and_wait_for_response(port));
 
-    println!("Finished listening to request!");
+    debug_println!("Finished listening to request!");
 
     debug_println!("Handing control back");
     closure(G_RESPONSE.lock().unwrap().take());
     debug_println!("Done with the request, exiting now");
 }
-
-/* DUMMY */
-
-pub fn basic_dummy() -> () {
-    println!("basic dummy function for testing");
-}
-
-/* DUMMY */
