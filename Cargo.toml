@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+debug_print = "1.0.0"
+hyper = { version = "0.14.23", features=["http1", "tcp", "server"]}
+lazy_static = "1.4.0"
+tokio = { version = "1.24.1", features=["full"]}
