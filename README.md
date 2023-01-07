@@ -8,5 +8,6 @@ This crate only has one function `start_listening_for_request` which takes a por
 The function runs synchronously while blocking the thread where it is invoked on.
 
 ## Availability
-[crates.io](https://crates.io/crates/oneshotserver)
+Crate IO Link -> [crates.io](https://crates.io/crates/oneshotserver)
+Documentation -> [docs.rs](https://docs.rs/oneshotserver/1.0.0/oneshotserver/)
 
