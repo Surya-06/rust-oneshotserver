@@ -21,6 +21,7 @@ lazy_static! {
 }
 
 async fn handle_request(request: Request<Body>) -> Result<Response<Body>, Infallible> {
+    // TODO: Add better error handling in case of failure.
     match G_SENDER.lock().unwrap().take() {
         Some(sender) => {
             G_RESPONSE.lock().unwrap().replace(request);
@@ -38,7 +39,14 @@ async fn handle_request(request: Request<Body>) -> Result<Response<Body>, Infall
 async fn launch_server_and_wait_for_response(port: u16) {
     // Setup global lock.
     let (tx, rx) = oneshot::channel::<()>();
-    G_SENDER.lock().unwrap().replace(tx);
+
+    match G_SENDER.lock() {
+        Ok(mut lock) => { lock.replace(tx); },
+        _ => {
+            debug_println!("Error when getting the lock for kill signal"); 
+            return; 
+        }
+    };
 
     // Create scaffolding for the response handler function.
     let make_service = make_service_fn(|_socket: &AddrStream| async move {
@@ -51,10 +59,16 @@ async fn launch_server_and_wait_for_response(port: u16) {
     let server = Server::bind(&addr)
         .serve(make_service)
         .with_graceful_shutdown(async {
-            rx.await.unwrap();
+            match rx.await {
+                Ok(()) => {debug_println!("Received kill signal!");},
+                _ => {debug_println!("Error when getting receiver signal");}
+            };
         });
 
-    server.await.unwrap();
+    if let Err(error) = server.await {
+        debug_println!("Error when starting the server, details : {}", error);
+    }
+
 }
 
 type ResponseClosure = fn(Option<Request<Body>>) -> ();
@@ -65,5 +79,13 @@ pub fn start_listening_for_request(port: u16, closure: ResponseClosure) {
         .build()
         .unwrap()
         .block_on(launch_server_and_wait_for_response(port));
-    closure(G_RESPONSE.lock().unwrap().take());
+
+    match G_RESPONSE.lock() {
+        Ok(mut request) => { closure(request.take()); },
+        Err(error) => {
+            debug_println!("Mutex poison error when fetching request, details : {}", error);
+            closure(None);
+        }
+    };
 }
+
