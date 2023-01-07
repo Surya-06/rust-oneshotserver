@@ -11,7 +11,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::{
-    runtime::Builder,
+    runtime::{Builder, Runtime},
     sync::oneshot::{self, Sender},
 };
 
@@ -41,10 +41,12 @@ async fn launch_server_and_wait_for_response(port: u16) {
     let (tx, rx) = oneshot::channel::<()>();
 
     match G_SENDER.lock() {
-        Ok(mut lock) => { lock.replace(tx); },
+        Ok(mut lock) => {
+            lock.replace(tx);
+        }
         _ => {
-            debug_println!("Error when getting the lock for kill signal"); 
-            return; 
+            debug_println!("Error when getting the lock for kill signal");
+            return;
         }
     };
 
@@ -60,32 +62,45 @@ async fn launch_server_and_wait_for_response(port: u16) {
         .serve(make_service)
         .with_graceful_shutdown(async {
             match rx.await {
-                Ok(()) => {debug_println!("Received kill signal!");},
-                _ => {debug_println!("Error when getting receiver signal");}
+                Ok(()) => {
+                    debug_println!("Received kill signal!");
+                }
+                _ => {
+                    debug_println!("Error when getting receiver signal");
+                }
             };
         });
 
     if let Err(error) = server.await {
         debug_println!("Error when starting the server, details : {}", error);
     }
-
 }
 
 type ResponseClosure = fn(Option<Request<Body>>) -> ();
 
 pub fn start_listening_for_request(port: u16, closure: ResponseClosure) {
-    Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(launch_server_and_wait_for_response(port));
+    let runtime: Option<Runtime> = match Builder::new_current_thread().enable_all().build() {
+        Ok(runtime) => Some(runtime),
+        Err(error) => {
+            debug_println!("Error while creating single thread runtime, {}", error);
+            None
+        }
+    };
+
+    if let Some(rt) = runtime {
+        rt.block_on(launch_server_and_wait_for_response(port));
+    };
 
     match G_RESPONSE.lock() {
-        Ok(mut request) => { closure(request.take()); },
+        Ok(mut request) => {
+            closure(request.take());
+        }
         Err(error) => {
-            debug_println!("Mutex poison error when fetching request, details : {}", error);
+            debug_println!(
+                "Mutex poison error when fetching request, details : {}",
+                error
+            );
             closure(None);
         }
     };
 }
-
