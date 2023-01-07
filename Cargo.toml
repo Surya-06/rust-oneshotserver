@@ -1,9 +1,16 @@
 [package]
 name = "oneshotserver"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+license-file = "LICENSE"
+description = "A quick utility to create a simple web server which blocks the current thread until the first request is served. Usecases include web requests for quick GET requests to APIs, OAuth token requests etc."
+readme = "README.md"
+repository = "https://github.com/Surya-06/rust-oneshotserver"
+homepage = "https://github.com/Surya-06/rust-oneshotserver"
+keywords = ["http-server", "one-shot-server", "synchronous-web-server"]
+categories = ["web-programming::http-server"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 
 [dependencies]
 debug_print = "1.0.0"
