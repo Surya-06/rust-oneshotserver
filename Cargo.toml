@@ -7,7 +7,7 @@ description = "A quick utility to create a simple web server which blocks the cu
 readme = "README.md"
 repository = "https://github.com/Surya-06/rust-oneshotserver"
 homepage = "https://github.com/Surya-06/rust-oneshotserver"
-keywords = ["http-server", "one-shot-server", "synchronous-web-server"]
+keywords = ["http-server", "one-shot-server", "sync-web-server"]
 categories = ["web-programming::http-server"]
 
 
